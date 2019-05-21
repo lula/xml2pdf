@@ -1,0 +1,23 @@
+<?xml version='1.0'?>
+<catalog>
+    <item>
+        <name>T-Bone shirt</name>
+        <price>15</price>
+        <description>Wear a steak</description>
+    </item>
+    <item>
+        <name>Hero shirt</name>
+        <price>13</price>
+        <description>Be a hero</description>
+    </item>
+    <item>
+        <name>Fishing jacket</name>
+        <price>33</price>
+        <description>Let's go fishing</description>
+    </item>
+    <item>
+        <name>Leather boots</name>
+        <price>43</price>
+        <description>Go comfy</description>
+    </item>
+</catalog>
