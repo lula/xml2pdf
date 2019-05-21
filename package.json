@@ -1,5 +1,5 @@
 {
-  "name": "xml-pdf",
+  "name": "xml2pdf",
   "version": "1.0.0",
   "description": "XML to PDF",
   "main": "index.js",
