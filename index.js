@@ -11,7 +11,7 @@ const program = require('commander');
 const util = require('util');
 
 //Module
-const xmlfpdfAsync = async function(xml, template, options = {}) {
+const xml2pdfAsync = async function(xml, template, options = {}) {
 	return new Promise((resolve, reject) => {
 		if (!xml) { reject(new Error('No XML supplied')); }	
 		if (!template) { reject(new Error('No template supplied')); }
@@ -28,7 +28,7 @@ const xmlfpdfAsync = async function(xml, template, options = {}) {
 	});
 }
 
-const xmlpdf = function (inPath, outPath, templatePath, options = {}, done = ()=>{}) {
+const xml2pdf = function (inPath, outPath, templatePath, options = {}, done = ()=>{}) {
 	if (!inPath) {
 		const err = new Error('Path to XML not specified');
 		return done(err);
@@ -150,5 +150,5 @@ program
 	})
 	.parse(process.argv);
 
-module.exports.xmlpdf = xmlpdf;
-module.exports.xmlfpdfAsync = xmlfpdfAsync;
+module.exports.xml2pdf = xml2pdf;
+module.exports.xml2pdfAsync = xml2pdfAsync;

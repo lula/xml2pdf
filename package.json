@@ -1,6 +1,6 @@
 {
   "name": "xml2pdf",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "XML to PDF",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "xml2js": "^0.4.19"
   },
   "bin": {
-    "xml-pdf": "index.js"
+    "xml2pdf": "index.js"
   },
   "devDependencies": {
     "rimraf": "^2.6.3"
