@@ -15,8 +15,11 @@ const xml2pdfAsync = async function(xml, template, options = {}) {
 	return new Promise((resolve, reject) => {
 		if (!xml) { reject(new Error('No XML supplied')); }	
 		if (!template) { reject(new Error('No template supplied')); }
-		parser.parseString(xml, function (err, result) {
-			if (err) return done(err);
+
+		xml2js.parseString(xml, {
+			tagNameProcessors: [xml2js.processors.stripPrefix] 
+		}, function (err, result) {
+			if (err) { reject(err) } ;
 			//Render HTML
 			const html = Mustache.render(template, result);
 			//Make PDF
