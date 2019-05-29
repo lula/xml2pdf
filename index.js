@@ -2,7 +2,6 @@
 'use strict';
 const fs = require('fs');
 const pdf = require('html-pdf');
-const Mustache = require('mustache');
 const qpdf = require('node-qpdf');
 const xml2js = require('xml2js');
 const parser = new xml2js.Parser();
@@ -10,18 +9,41 @@ const chalk = require('chalk');
 const program = require('commander');
 const util = require('util');
 
+const handlebars = require('handlebars');
+
+// Handlebars helpers
+handlebars.registerHelper('switch', function (value, options) {
+	this.switch_value = value;
+	this.switch_break = false;
+	return options.fn(this);
+});
+
+handlebars.registerHelper('case', function (value, options) {
+	if (value == this.switch_value) {
+		this.switch_break = true;
+		return options.fn(this);
+	}
+});
+
+handlebars.registerHelper('default', function (value, options) {
+	if (this.switch_break == false) {
+		return value;
+	}
+});
+
 //Module
-const xml2pdfAsync = async function(xml, template, options = {}) {
+const xml2pdfAsync = async function (xml, template, options = {}) {
 	return new Promise((resolve, reject) => {
-		if (!xml) { reject(new Error('No XML supplied')); }	
+		if (!xml) { reject(new Error('No XML supplied')); }
 		if (!template) { reject(new Error('No template supplied')); }
 
 		xml2js.parseString(xml, {
-			tagNameProcessors: [xml2js.processors.stripPrefix] 
+			tagNameProcessors: [xml2js.processors.stripPrefix]
 		}, function (err, result) {
-			if (err) { reject(err) } ;
+			if (err) { reject(err) };
 			//Render HTML
-			const html = Mustache.render(template, result);
+			const handlebarsTemplate = handlebars.compile(template);
+			const html = handlebarsTemplate(result);
 			//Make PDF
 			pdf.create(html, options.pdf).toBuffer(function (err, res) {
 				if (err) { reject(err); }
@@ -31,17 +53,17 @@ const xml2pdfAsync = async function(xml, template, options = {}) {
 	});
 }
 
-const xml2pdf = function (inPath, outPath, templatePath, options = {}, done = ()=>{}) {
+const xml2pdf = function (inPath, outPath, templatePath, options = {}, done = () => { }) {
 	if (!inPath) {
 		const err = new Error('Path to XML not specified');
 		return done(err);
 	}
-	
+
 	if (!outPath) {
 		const err = new Error('Export path not specified');
 		return done(err);
 	}
-	
+
 	if (!templatePath) {
 		const err = new Error('Template path not specified');
 		return done(err);
@@ -53,7 +75,7 @@ const xml2pdf = function (inPath, outPath, templatePath, options = {}, done = ()
 		console.log(chalk.bold.underline.green("End Warning"));
 		options = { verbose: false };
 	}
-	
+
 	if (options.verbose) {
 		//VERBOSE MODE
 		console.log(chalk.bgBlack.magenta("START VERBOSE: OPTIONS"))
@@ -86,12 +108,13 @@ const xml2pdf = function (inPath, outPath, templatePath, options = {}, done = ()
 			//Read Template
 			const template = fs.readFileSync(templatePath, 'utf8');
 			//Render HTML
-			const html = Mustache.render(template, result);
+			const html = handlebarsTemplate(result);
+
 			if (options.verbose) {
 				//VERBOSE MODE
-				console.log(chalk.bgBlack.magenta("START VERBOSE: MUSTACHE COMPILED HTML"))
+				console.log(chalk.bgBlack.magenta("START VERBOSE: HANDLEBARS COMPILED HTML"))
 				console.log(html);
-				console.log(chalk.bgGreen.black("END VERBOSE: MUSTACHE COMPILED HTML"))
+				console.log(chalk.bgGreen.black("END VERBOSE: HANDLEBARS COMPILED HTML"))
 				//END VERBOSE MODE
 			}
 
