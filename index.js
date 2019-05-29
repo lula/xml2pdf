@@ -36,7 +36,13 @@ const xml2pdfAsync = async function (xml, template, options = {}) {
 	return new Promise((resolve, reject) => {
 		if (!xml) { reject(new Error('No XML supplied')); }
 		if (!template) { reject(new Error('No template supplied')); }
-
+		if (options.handlebars && options.handlebars.helpers) {
+			options.handlebars.helpers.forEach(helper => {
+				if (helper.name && helper.fn) {
+					handlebars.registerHelper(helper.name, helper.fn);
+				}
+			});
+		}
 		xml2js.parseString(xml, {
 			tagNameProcessors: [xml2js.processors.stripPrefix]
 		}, function (err, result) {

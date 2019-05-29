@@ -5,23 +5,27 @@
         <price>15</price>
         <description>Wear a steak</description>
         <warehouse>001</warehouse>
+        <date>2019-05-29</date>
     </item>
     <item>
         <name>Hero shirt</name>
         <price>13</price>
         <description>Be a hero</description>
         <warehouse>002</warehouse>
+        <date>2019-05-29</date>
     </item>
     <item>
         <name>Fishing jacket</name>
         <price>33</price>
         <description>Let's go fishing</description>
         <warehouse>001</warehouse>
+        <date>2019-05-29</date>
     </item>
     <item>
         <name>Leather boots</name>
         <price>43</price>
         <description>Go comfy</description>
         <warehouse>003</warehouse>
+        <date>2019-05-29</date>
     </item>
 </catalog>
