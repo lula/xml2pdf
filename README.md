@@ -2,8 +2,6 @@
 
 This repo has been inspired from [xml-pdf](https://gitlab.com/poster983/XML-PDF). 
 
-In addition to `xml2pdf` CLI (see [`xml-pdf`](https://gitlab.com/poster983/XML-PDF) for more info) this lib provides an async function to generate PDF from XML without accessing the filesystem (so that, for instance, it can be used in the browser):
-
 ## Basic usage
 
 ```language=javascript
