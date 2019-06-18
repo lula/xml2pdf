@@ -1,5 +1,5 @@
 <?xml version='1.0'?>
-<catalog>
+<catalog name="My catalog">
     <item>
         <name>T-Bone shirt</name>
         <price>15</price>

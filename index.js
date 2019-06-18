@@ -2,11 +2,8 @@
 'use strict';
 const fs = require('fs');
 const pdf = require('html-pdf');
-const qpdf = require('node-qpdf');
 const xml2js = require('xml2js');
 const parser = new xml2js.Parser();
-const chalk = require('chalk');
-const program = require('commander');
 const util = require('util');
 
 const handlebars = require('handlebars');
@@ -32,10 +29,10 @@ handlebars.registerHelper('default', function (value, options) {
 });
 
 //Module
-const xml2pdfAsync = async function (xml, template, options = {}) {
+const xml2pdfAsync = async function (xml, options) {
 	return new Promise((resolve, reject) => {
 		if (!xml) { reject(new Error('No XML supplied')); }
-		if (!template) { reject(new Error('No template supplied')); }
+		if (!options.template) { reject(new Error('No template supplied')); }
 		if (options.handlebars && options.handlebars.helpers) {
 			options.handlebars.helpers.forEach(helper => {
 				if (helper.name && helper.fn) {
@@ -43,15 +40,40 @@ const xml2pdfAsync = async function (xml, template, options = {}) {
 				}
 			});
 		}
+
 		xml2js.parseString(xml, {
 			tagNameProcessors: [xml2js.processors.stripPrefix]
 		}, function (err, result) {
 			if (err) { reject(err) };
-			//Render HTML
-			const handlebarsTemplate = handlebars.compile(template);
+
+			let htmlPdfOptions = Object.assign({}, options.pdf || {});
+			// Render HTML (header)
+			if (options.header && options.header.template) {
+				const handlebarsHeaderTemplate = handlebars.compile(options.header.template);
+				const headerHtml = handlebarsHeaderTemplate(result);
+				htmlPdfOptions.header = {
+					height: options.header.height || '10mm',
+					contents: headerHtml
+				} 
+			}
+
+			// Render HTML (footer)
+			if (options.footer && options.footer.template) {
+				const handlebarsFooterTemplate = handlebars.compile(options.footer.template);
+				let footerHtml = handlebarsFooterTemplate(result);
+				footerHtml = footerHtml.replace('{page}', '{{page}}')
+				htmlPdfOptions.footer = {
+					height: options.footer.height || '10mm',
+					contents: footerHtml
+				}
+			}
+
+			// Render HTML (main template)
+			const handlebarsTemplate = handlebars.compile(options.template);
 			const html = handlebarsTemplate(result);
-			//Make PDF
-			pdf.create(html, options.pdf).toBuffer(function (err, res) {
+
+			// Make PDF
+			pdf.create(html, htmlPdfOptions).toBuffer(function (err, res) {
 				if (err) { reject(err); }
 				else { resolve(res); }
 			});
@@ -59,128 +81,4 @@ const xml2pdfAsync = async function (xml, template, options = {}) {
 	});
 }
 
-const xml2pdf = function (inPath, outPath, templatePath, options = {}, done = () => { }) {
-	if (!inPath) {
-		const err = new Error('Path to XML not specified');
-		return done(err);
-	}
-
-	if (!outPath) {
-		const err = new Error('Export path not specified');
-		return done(err);
-	}
-
-	if (!templatePath) {
-		const err = new Error('Template path not specified');
-		return done(err);
-	}
-
-	if (Object.keys(options).length === 0 && options.constructor === Object) {
-		console.log(chalk.bold.underline.yellow("Warning:"));
-		console.log(chalk.yellow("Using default options"));
-		console.log(chalk.bold.underline.green("End Warning"));
-		options = { verbose: false };
-	}
-
-	if (options.verbose) {
-		//VERBOSE MODE
-		console.log(chalk.bgBlack.magenta("START VERBOSE: OPTIONS"))
-		console.log(util.inspect(options, { showHidden: false, depth: null }))
-		console.log(chalk.bgGreen.black("END VERBOSE: OPTIONS"))
-		//END VERBOSE MODE
-	}
-
-	//read xml file
-	fs.readFile(inPath, function (err, data) {
-		if (err) return done(err);
-		if (options.verbose) {
-			//VERBOSE MODE
-			console.log(chalk.bgBlack.magenta("START VERBOSE: XML BUFFER"))
-			console.log(data)
-			console.log(chalk.bgGreen.black("END VERBOSE: XML BUFFER"))
-			//END VERBOSE MODE
-		}
-
-		//parse to string
-		parser.parseString(data, function (err, result) {
-			if (err) return done(err);
-			if (options.verbose) {
-				//VERBOSE MODE
-				console.log(chalk.bgBlack.magenta("START VERBOSE: XML2JSON"))
-				console.log(util.inspect(result, { showHidden: false, depth: null }));
-				console.log(chalk.bgGreen.black("END VERBOSE: XML2JSON"))
-				//END VERBOSE MODE
-			}
-			//Read Template
-			const template = fs.readFileSync(templatePath, 'utf8');
-			//Render HTML
-			const html = handlebarsTemplate(result);
-
-			if (options.verbose) {
-				//VERBOSE MODE
-				console.log(chalk.bgBlack.magenta("START VERBOSE: HANDLEBARS COMPILED HTML"))
-				console.log(html);
-				console.log(chalk.bgGreen.black("END VERBOSE: HANDLEBARS COMPILED HTML"))
-				//END VERBOSE MODE
-			}
-
-			//Make PDF
-			pdf.create(html, options.pdf).toFile(outPath, function (err, res) {
-				if (err) return done(err);
-				if (options.verbose) {
-					//VERBOSE MODE
-					console.log(chalk.bgBlack.magenta("START VERBOSE: PDF CREATE"))
-					console.log(res);
-					console.log(chalk.bgGreen.black("END VERBOSE: PDF CREATE"))
-					//END VERBOSE MODE
-				}
-				return done(null, res)
-			});
-		});
-	});
-};
-
-const glob = this;
-
-//CLI
-program
-	.version('1.2.2')
-	.arguments('<xml> <template> <output>')
-	.option('-h, --height <height>', 'Height of the pdf.  Not to be used with \"--format\" and \"--orientation\"  Allowed units: mm, cm, in, px')
-	.option('-w, --width <width>', 'Width of the pdf.  Not to be used with \"--format\" and \"--orientation\"  Allowed units: mm, cm, in, px')
-	.option('-f, --format <format>', 'Not to be used with \"--height\" and \"--width\" Allowed units: A3, A4, A5, Legal, Letter, Tabloid')
-	.option('-o, --orientation <orientation>', 'portrait or landscape.  Not to be used with \"--height\" and \"--width\"')
-	.option('-v, --verbose', 'Enables verbose mode. Helpful when setting up the template.')
-	.action(function (input, template, output) {
-		const settings = {}
-		if (program.height) {
-			settings.pdf.height = program.height
-		}
-		if (program.width) {
-			settings.pdf.width = program.width
-		}
-		if (program.format) {
-			settings.pdf.format = program.format
-		}
-		if (program.orientation) {
-			settings.pdf.orientation = program.orientation
-		}
-		if (program.verbose) {
-			settings.pdf.verbose = program.verbose
-		}
-		glob.xmlpdf(input, output, template, settings, function (err, pth) {
-			if (err) {
-				console.log(chalk.underline.keyword('orange')("XML2PDF Encountered an error. Check below for details."))
-				console.log(chalk.bgRed.black("START ERROR"));
-				console.log(chalk.bold.red(err))
-				console.log(chalk.bgGreen.black("END ERROR"))
-			} else {
-				console.log(chalk.bold.blue("Exported To: ") + chalk.green(pth.filename));
-			}
-
-		})
-	})
-	.parse(process.argv);
-
-module.exports.xml2pdf = xml2pdf;
 module.exports.xml2pdfAsync = xml2pdfAsync;

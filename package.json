@@ -1,6 +1,6 @@
 {
   "name": "xml2pdf",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "XML to PDF",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,6 @@
   "homepage": "https://github.com/lula/xml-pdf#readme",
   "dependencies": {
     "chalk": "^2.4.2",
-    "commander": "^2.20.0",
     "handlebars": "^4.1.2",
     "html-pdf": "^2.2.0",
     "node-qpdf": "^1.0.3",
